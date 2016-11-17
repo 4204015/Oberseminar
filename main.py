@@ -62,6 +62,7 @@ if System == 'PT1':
 
 # AUSGABE ---------------------------------------------------------------------
 
+print("Schätzung über Fläche\n")
 print("K_e = " + str(K_e))
 print("T_e = " + str(T_e))
 plot(t, b_out[G])
