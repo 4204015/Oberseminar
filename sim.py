@@ -16,8 +16,9 @@ def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K):
     u, y = inputs('u, y')
  
     if only == True:   # only controlled system
+    
         G = TFBlock(controlled_system, u)
-        
+
     else:    # simulation with PID
         SUM1 = Blockfnc(u - y)
         

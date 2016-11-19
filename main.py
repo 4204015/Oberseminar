@@ -23,6 +23,7 @@ import numpy as np
 # Own functions
 from sim import Simulator
 from area_method import area_method
+from prbs_gen import prbsfnc
 
 # SYSTEM ----------------------------------------------------------------------
 
@@ -36,12 +37,15 @@ PT1 = K / (T*s + 1)
 
 # SIMULATIONSSTEUERUNG --------------------------------------------------------
 
-t_max = 30                  # Simulationsdauer in Sekunden
-t_sprung = 5
-u = stepfnc(t_sprung, 1)    # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
-PID = [3,1,1,10]             # Parameter des PID Reglers - T_i, T_d, T_n, K
+t_max = 10                  # Simulationsdauer in Sekunden
 
-t, b_out, G = Simulator(t_max,u,PT1,False,*PID)
+t_sprung = 0
+#u = stepfnc(t_sprung, 45)    # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
+
+u = prbsfnc(10,5)
+
+PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
+t, b_out, G = Simulator(t_max,u,PT1,True,*PID)
 y = b_out[G]
 
 # SYSTEMIDENTIFIKATION --------------------------------------------------------
