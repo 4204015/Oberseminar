@@ -21,9 +21,9 @@ def prbsfnc(A,N):
         while i > size:
             i = i - size
         
+        print(i)
         if i > -1 and i < size:
             u = prbs[i]
-
         else:
             u = 0
             

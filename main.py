@@ -37,12 +37,12 @@ PT1 = K / (T*s + 1)
 
 # SIMULATIONSSTEUERUNG --------------------------------------------------------
 
-t_max = 10                  # Simulationsdauer in Sekunden
+t_max = 0.1                  # Simulationsdauer in Sekunden
 
 t_sprung = 0
 #u = stepfnc(t_sprung, 45)    # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-u = prbsfnc(10,5)
+u = prbsfnc(10,10)
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 t, b_out, G = Simulator(t_max,u,PT1,True,*PID)
