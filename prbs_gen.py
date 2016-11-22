@@ -6,26 +6,18 @@ Oberseminar Regelungstechnik - Auto-tuning PID
 -------------------------------------------------------------------------------
 """
 
-import random
+import numpy as np
 
 def prbsfnc(A,N):
-    prbs = []
-    for num in range(N):  
-        prbs.append(random.uniform(0, A))
-        
+    global prbs
+    prbs = A * (np.random.rand(N) - 0.5)     
+    print(sum(prbs)/len(prbs))
+    
     def fnc(t):
-        size = N
-        dt = 5e-3
-        i = int(t // dt) - 1
+        global prbs            
+        u = prbs[0]
+        prbs = np.roll(prbs,1)  # Liste mit PRB-Zahlen wird rotiert
+        #print (u)
+        return u   
         
-        while i > size:
-            i = i - size
-        
-        if i > -1 and i < size:
-            u = prbs[i]
-
-        else:
-            u = 0
-            
-        return u      
-    return fnc
+    return fnc ,prbs , A, N
