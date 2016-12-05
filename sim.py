@@ -18,6 +18,8 @@ def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K):
     if only == True:   # only controlled system
     
         G = TFBlock(controlled_system, u)
+        
+        IN = Blockfnc(u)
 
     else:    # simulation with PID
         SUM1 = Blockfnc(u - y)
@@ -31,11 +33,13 @@ def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K):
         G = TFBlock(controlled_system, Kp.Y)
         
         loop(G.Y, y)
+        
+        IN = Blockfnc(u)
     
     t, states = blocksimulation(t_max, (u, u_func)) # integrate 10 seconds
     
     b_out = compute_block_ouptputs(states)
     
-    return t,b_out, G
+    return t,b_out, G, IN
 
 

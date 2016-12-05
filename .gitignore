@@ -1,2 +1,4 @@
 *.pyc
 __pycache__/sim.cpython-35.pyc
+*.pyc
+*.pyc

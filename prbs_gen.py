@@ -7,17 +7,19 @@ Oberseminar Regelungstechnik - Auto-tuning PID
 """
 
 import numpy as np
+from random import choice
 
-def prbsfnc(A,N):
-    global prbs
-    prbs = A * (np.random.rand(N) - 0.5)     
+def prbsfnc(A,N,dt):   
+    prbs = np.array([choice([1,-1])*A for x in range(N)])             
     print(sum(prbs)/len(prbs))
+    tt = [dt*x for x in range(N)]
+    tt = np.array(tt)
+    t_max = tt[N-1]
     
     def fnc(t):
-        global prbs            
-        u = prbs[0]
-        prbs = np.roll(prbs,1)  # Liste mit PRB-Zahlen wird rotiert
-        #print (u)
-        return u   
+        
+        t = t % t_max
+        idx = len(tt[tt < t])
+        return prbs[idx] # + 1    # Überlagerung mit Einheitsprung    
         
     return fnc ,prbs , A, N
