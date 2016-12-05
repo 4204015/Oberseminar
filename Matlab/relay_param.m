@@ -1,19 +1,23 @@
-a=1;    % Amplitude des Relayblocks
-h=0;    % Schaltsch
-h_offset=0; % gegebenfalls Offset für Hysterese
-a_offset=0; % gegebenfalls Offset für Amplitude
+clear all;
+
+d=1;    % Amplitude des Relayblocks
+e=0;    % Hysterese
+e_offset=0; % gegebenfalls Offset für Hysterese
+d_offset=0; % gegebenfalls Offset für Amplitude
 
 %simouts=zeros(1000,3,5);
 %touts=zeros(1000,5);
 
 figure(1);
-for i=1:1
-    h=h+0.4;
+n=6;
+for i=1:n
+    e=e+1;
     sim('relay_sim.slx',[0.1 100]);
-    subplot(5,1,i);
-    stairs(tout,simout);
+    subplot(n,1,i);
+    stairs(tout,simout(:,:));
     grid on;
     %ylim([-1.5 1.5]);
+    %xlim([0 100]);
     for j=1:size(tout)
         simouts(j,:,i)=simout(j,:);
         touts(j,i)=tout(j);
@@ -48,8 +52,19 @@ amp_dauerschwingung=max(simouts(:,3,1));%0;
 %     end
 % end
 
-%% negative inverse Übertragungsfunktion N(a)
+%% negative inverse Übertragungsfunktion des Relays N(a), a = amp_dauerschwingung
 
-N_RE=4*a/pi/amp_dauerschwingung*sqrt(1-(h/amp_dauerschwingung)^2);
-N_IM=-4*a/pi/amp_dauerschwingung*h/amp_dauerschwingung;
-N=4*a/pi/amp_dauerschwingung*(sqrt(1-(h/amp_dauerschwingung)^2)-h/amp_dauerschwingung*i);
+nr = 4*d/pi/amp_dauerschwingung*sqrt(1-(e/amp_dauerschwingung)^2);
+ni = -4*d/pi/amp_dauerschwingung*e/amp_dauerschwingung;
+N_RE = real(nr)-image(ni);
+N_IM = real(ni)+imag(nr);
+
+%% Parameteridentifikation über G(j*omega_180)=-1/N(a), a = amp_dauerschwingung
+% PT1-Strecke
+K_pt1 = -1/N_RE;
+T_pt1 = N_IM/N_RE/omega_180;
+
+% PT2-Strecke
+T1_pt2 = -N_RE/N_IM/omega_180 - sqrt(N_RE/N_IM/omega_180+1/omega_180^2);
+T2_pt2 = -N_RE/N_IM/omega_180 + sqrt(N_RE/N_IM/omega_180+1/omega_180^2);
+K_pt2 = (T1_pt2*T2_pt2*omega_180^2-1)/N_RE;
