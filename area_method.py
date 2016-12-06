@@ -20,7 +20,7 @@ def area_method(t,t_sprung,y):
     y = y[1:]    
 
     # Schätzung (estimation) der Zeitkonstanten und K
-    K = y[-1]
+    K = sum(y[-100:-1])/99
     T = (K*(t[-1] - t_sprung) - simps(y,t)) / K
     
     return K,T

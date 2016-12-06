@@ -12,7 +12,8 @@ Oberseminar Regelungstechnik - Auto-tuning PID
 from pyblocksim import inputs, TFBlock, stepfnc, blocksimulation, compute_block_ouptputs
 
 # Plotting library
-from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, subplot, tight_layout, close
+from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, subplot, tight_layout, ylim, close
+import matplotlib as mp
 
 # Library for symbolic mathematics
 import sympy as sp
@@ -62,39 +63,44 @@ G_= control.tf([9],[2,6,9])
 dt = 0.1
 
 ###
-figure(0)
-w = np.logspace(-3,3,1000)
-real, imag, freq = control.nyquist(G_,w)
-grid(True)
-xlabel('Re(s)')
-ylabel('Im(s)')
-show()
+#figure(0)
+#w = np.logspace(-3,3,1000)
+#real, imag, freq = control.nyquist(G_,w)
+#grid(True)
+#xlabel('Re(s)')
+#ylabel('Im(s)')
+#show()
 ###
 
 # SIMULATIONSSTEUERUNG --------------------------------------------------------
 
 t_sprung = 0
-#ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
+ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
 N = 63
-ufnc, u_, A, N = prbsfnc(1,N,dt)        # PRBS Signal mit Amplitude, Periodendauer
+#ufnc, u_, A, N = prbsfnc(1,N,dt)        # PRBS Signal mit Amplitude, Periodendauer
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 
-t_max = int(2.5*dt*N)                  # Simulationsdauer in Sekunden
-t, b_out, G, IN = Simulator(t_max,ufnc,CDS,True,*PID)
+#t_max = int(2.5*dt*N)  
+t_max = 25                # Simulationsdauer in Sekunden
+t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,PT1,True,*PID,True)
 y = b_out[G]
 u = np.array(b_out[IN])
 #u -= 1
 
 # SYSTEMIDENTIFIKATION --------------------------------------------------------
 
-System = ''
+System = 'PT1'
 
 # PARAMETERIDENTIFIKATION -----------------------------------------------------
 
 if System == 'PT1':
     K_e,T_e = area_method(t,t_sprung,b_out[G])
+    print("K_e = " + str(K_e))
+    print("T_e = " + str(T_e))
+    
+    K_e,T_e = area_method(t,t_sprung,b_out[G_noise])
     print("K_e = " + str(K_e))
     print("T_e = " + str(T_e))
     
@@ -133,7 +139,20 @@ else:   # System -> unknown
      
 
 # AUSGABE ---------------------------------------------------------------------
-#figure(3)
-#plot(t, b_out[G])
-#
-#show()
+
+mp.rcParams.update({'font.size': 30})
+figure(3)
+subplot(121)
+plot(t, b_out[G])
+title('a)')
+xlabel('t in s')
+ylabel('y')
+ylim(0,2.2)
+subplot(122)
+plot(t, b_out[G_noise])
+title('b)')
+xlabel('t in s')
+ylabel('y')
+ylim(0,2.2)
+
+show()
