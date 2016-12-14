@@ -9,7 +9,8 @@ Oberseminar Regelungstechnik - Auto-tuning PID
 import numpy as np
 from random import choice
 
-def prbsfnc(A,N,dt):   
+def prbsfnc(A,N,dt): 
+    # choice wird mit der derzeitigen Systemzeit initialisiert
     prbs = np.array([choice([1,-1])*A for x in range(N)])             
     print(sum(prbs)/len(prbs))
     tt = [dt*x for x in range(N)]

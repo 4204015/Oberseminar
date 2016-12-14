@@ -12,7 +12,7 @@ Oberseminar Regelungstechnik - Auto-tuning PID
 from pyblocksim import inputs, TFBlock, stepfnc, blocksimulation, compute_block_ouptputs
 
 # Plotting library
-from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, subplot, tight_layout, ylim, close
+from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, subplot, tight_layout, ylim, xlim, close, loglog, semilogx
 import matplotlib as mp
 
 # Library for symbolic mathematics
@@ -52,15 +52,16 @@ PT2 = K / (T**2 * s**2 + 2*theta*T*s + 1)
 
 
 # Process II [Hang1991]
-#P2 = (1 - 0.5*s) / (1 + s)**3 
-#dt = 0.4
-#G_ = control.tf([-0.5,1],[1,3,3,1])
-
+P2 = (1 - 0.5*s) / (1 + s)**3 
+dt = 0.2
+G_ = control.tf([-0.5,1],[1,3,3,1])
+figure(100)
+control.bode(G_)
 
 # Critical damped System [Husin2008]
-CDS = 9 / (s**2 + 6*s + 9)
-G_= control.tf([9],[2,6,9])
-dt = 0.1
+#CDS = 9 / (s**2 + 6*s + 9)
+#G_= control.tf([9],[2,6,9])
+#dt = 0.1
 
 ###
 #figure(0)
@@ -69,29 +70,31 @@ dt = 0.1
 #grid(True)
 #xlabel('Re(s)')
 #ylabel('Im(s)')
+#xlim(-0.5,0.1)
+#ylim(-0.7,0.2)
 #show()
 ###
 
 # SIMULATIONSSTEUERUNG --------------------------------------------------------
 
 t_sprung = 0
-ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
+#ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-N = 63
-#ufnc, u_, A, N = prbsfnc(1,N,dt)        # PRBS Signal mit Amplitude, Periodendauer
+N = 1023
+ufnc, u_, A, N = prbsfnc(1,N,dt)        # PRBS Signal mit Amplitude, Periodendauer
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 
-#t_max = int(2.5*dt*N)  
-t_max = 25                # Simulationsdauer in Sekunden
-t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,PT1,True,*PID,True)
+#t_max = int(1.5*dt*N)  
+t_max = 30                # Simulationsdauer in Sekunden
+t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,P2,True,*PID,True)
 y = b_out[G]
 u = np.array(b_out[IN])
 #u -= 1
 
 # SYSTEMIDENTIFIKATION --------------------------------------------------------
 
-System = 'PT1'
+System = ''
 
 # PARAMETERIDENTIFIKATION -----------------------------------------------------
 
@@ -116,43 +119,52 @@ else:   # System -> unknown
     
     figure(1)
     grid()
-    subplot(411)
+    subplot(311)
     plot(t,u)
     title('PRBS Signal u (T = %4.2f)' % (N*dt))
     
-    subplot(412)
+    subplot(312)
     plot(t,y)
     title('Systemausgang y')
     
-    subplot(413)
+    subplot(313)
     plot(t,AKF_u[len(t)-1:])
     title('Autokorrelation uu')
+    xlabel('t in s')
  
-    subplot(414)
-    plot(t,Phi[len(t)-1:])
-    title('Kreuzkorrelation')
+#    subplot(414)
+#    plot(t,Phi[len(t)-1:])
+#    title('Kreuzkorrelation')
     
     tight_layout()
     
-    figure(2)
-    plot(F[:].real,F[:].imag)
+#    figure(2)
+#    plot(F[:].real,F[:].imag)
      
+
+    F_abs = np.abs(F)
+    F_phi = np.arctan2(F.imag, F.real) * 180 / np.pi
+    figure(100)
+    subplot(211)
+    loglog(F_abs)
+    title('Amplitudengang')
+    subplot(212)
+    semilogx(F_phi)
+    title('Frequenzgang')
 
 # AUSGABE ---------------------------------------------------------------------
 
-mp.rcParams.update({'font.size': 30})
-figure(3)
-subplot(121)
-plot(t, b_out[G])
-title('a)')
-xlabel('t in s')
-ylabel('y')
-ylim(0,2.2)
-subplot(122)
-plot(t, b_out[G_noise])
-title('b)')
-xlabel('t in s')
-ylabel('y')
-ylim(0,2.2)
-
-show()
+#mp.rcParams.update({'font.size': 30})
+#figure(3)
+#subplot(121)
+#plot(t, b_out[G])
+#xlabel('t in s')
+#ylabel('y')
+#ylim(0,2.2)
+#subplot(122)
+#plot(t, b_out[G_noise])
+#xlabel('t in s')
+#ylabel('y')
+#ylim(0,2.2)
+#
+#show()
