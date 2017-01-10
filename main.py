@@ -52,8 +52,8 @@ PT2 = K / (T**2 * s**2 + 2*theta*T*s + 1)
 
 
 # Process II [Hang1991]
-P2 = (1 - 0.5*s) / (1 + s)**3 
-dt = 0.2
+P2 = (1 - 0.05*s) / (1 + s)**3 
+dt = 0.02
 G_ = control.tf([-0.5,1],[1,3,3,1])
 figure(100)
 control.bode(G_)
@@ -80,7 +80,7 @@ control.bode(G_)
 t_sprung = 0
 #ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-N = 1023
+N = 10000
 ufnc, u_, A, N = prbsfnc(1,N,dt)        # PRBS Signal mit Amplitude, Periodendauer
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
@@ -119,31 +119,37 @@ else:   # System -> unknown
     
     figure(1)
     grid()
-    subplot(311)
+    subplot(411)
     plot(t,u)
     title('PRBS Signal u (T = %4.2f)' % (N*dt))
     
-    subplot(312)
+    subplot(412)
     plot(t,y)
     title('Systemausgang y')
     
-    subplot(313)
+    subplot(413)
     plot(t,AKF_u[len(t)-1:])
     title('Autokorrelation uu')
     xlabel('t in s')
  
-#    subplot(414)
-#    plot(t,Phi[len(t)-1:])
-#    title('Kreuzkorrelation')
+    subplot(414)
+    #plot(t,Phi[len(t)-1:])
+    plot(Phi)
+    title('Kreuzkorrelation')
     
     tight_layout()
     
 #    figure(2)
 #    plot(F[:].real,F[:].imag)
      
-
-    F_abs = np.abs(F)
-    F_phi = np.arctan2(F.imag, F.real) * 180 / np.pi
+    L = len(F) / 2 + 1
+    freq_axis = np.linspace(0,1/(2*5e-3),L)
+    figure(99)
+    plot(freq_axis, np.abs(F[:L]) )
+    
+    
+    F_abs = np.abs(F[:L])
+    F_phi = np.arctan2(F[:L].imag, F[:L].real) * 180 / np.pi
     figure(100)
     subplot(211)
     loglog(F_abs)

@@ -20,6 +20,7 @@ def cross_cor_method(y,u,A,N,dt):
     
     # Impulsantwort des Systems
     g = 1 / (A**2 * dt) * (N/ (N + 1)) * (Phi_mod + sum(Phi_mod)) 
+    g = Phi
     G = np.fft.fft(g)
     
     
