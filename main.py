@@ -38,25 +38,25 @@ close("all")
 s = sp.Symbol('s')
 
 #PT1
-K = 2
-T = 3
-PT1 = K / (T*s + 1)
-
-
-#PT2
-K = 1
-T = 3
-theta = 0.3
-PT2 = K / (T**2 * s**2 + 2*theta*T*s + 1)
-#G_ = control.tf([K],[T**2,2*theta*T,1])
-
-
-# Process II [Hang1991]
-P2 = (1 - 0.05*s) / (1 + s)**3 
-dt = 0.02
-G_ = control.tf([-0.5,1],[1,3,3,1])
-figure(100)
-control.bode(G_)
+#K = 2
+#T = 3
+#PT1 = K / (T*s + 1)
+#
+#
+##PT2
+#K = 1
+#T = 3
+#theta = 0.3
+#PT2 = K / (T**2 * s**2 + 2*theta*T*s + 1)
+##G_ = control.tf([K],[T**2,2*theta*T,1])
+#
+#
+## Process II [Hang1991]
+#P2 = (1 - 0.05*s) / (1 + s)**3 
+#dt = 0.02
+#G_ = control.tf([-0.5,1],[1,3,3,1])
+#figure(100)
+#control.bode(G_)
 
 # Critical damped System [Husin2008]
 #CDS = 9 / (s**2 + 6*s + 9)
@@ -75,19 +75,27 @@ control.bode(G_)
 #show()
 ###
 
+
+# 
+P = (1 - 0.05*s + 4* s**2) / (1 + s)**3 
+G_ = control.tf([4,-0.5,1],[1,3,3,1])
+figure(100)
+control.bode(G_)
+
 # SIMULATIONSSTEUERUNG --------------------------------------------------------
 
 t_sprung = 0
 #ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-N = 10000
-ufnc, u_, A, N = prbsfnc(1,N,dt)        # PRBS Signal mit Amplitude, Periodendauer
+N = 1000
+dt = 0.01
+ufnc, u_, A, N = prbsfnc(0.01,N,dt)        # PRBS Signal mit Amplitude, Periodendauer, Bitintervall
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 
 #t_max = int(1.5*dt*N)  
 t_max = 30                # Simulationsdauer in Sekunden
-t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,P2,True,*PID,True)
+t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,P,True,*PID,True)
 y = b_out[G]
 u = np.array(b_out[IN])
 #u -= 1
@@ -111,11 +119,11 @@ if System == 'PT1':
     
     
 else:   # System -> unknown
-    F, Phi, g = cross_cor_method(b_out[G],b_out[IN],A,N,dt)
+    F, R_uy, g = cross_cor_method(b_out[G],b_out[IN],A,N,dt)
     t_inv = t[::-1]
     t_cor = np.vstack([t_inv[:len(t)-1]*-1,t])
     
-    AKF_u = np.correlate(u,u,'full') / len(u)
+    AKF_u = np.correlate(u,u,'full')
     
     figure(1)
     grid()
@@ -129,33 +137,36 @@ else:   # System -> unknown
     
     subplot(413)
     plot(t,AKF_u[len(t)-1:])
-    title('Autokorrelation uu')
+    title('Autokorrelation R_uu')
     xlabel('t in s')
  
     subplot(414)
     #plot(t,Phi[len(t)-1:])
-    plot(Phi)
-    title('Kreuzkorrelation')
+    plot(R_uy)
+    title('Kreuzkorrelation R_uy')
     
     tight_layout()
     
 #    figure(2)
 #    plot(F[:].real,F[:].imag)
      
-    L = len(F) / 2 + 1
-    freq_axis = np.linspace(0,1/(2*5e-3),L)
-    figure(99)
-    plot(freq_axis, np.abs(F[:L]) )
+    L = (len(F) + 1 )/ 2  # Länge des halben FFT-Ergebnis
+    fft_timestep = 5e-3  
+    freq_axis = np.linspace(0, 1 / (2 * fft_timestep),L,endpoint=True)
+    F = F * 2 / L   # Amplitude anpassen
+
     
-    
+    # Bodediagramm aus der ermittelten Übertragungsfunktion F
     F_abs = np.abs(F[:L])
     F_phi = np.arctan2(F[:L].imag, F[:L].real) * 180 / np.pi
+                       
     figure(100)
     subplot(211)
-    loglog(F_abs)
+    loglog(freq_axis,F_abs)
     title('Amplitudengang')
+    
     subplot(212)
-    semilogx(F_phi)
+    semilogx(freq_axis,F_phi)
     title('Frequenzgang')
 
 # AUSGABE ---------------------------------------------------------------------
