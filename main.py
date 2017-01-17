@@ -37,11 +37,14 @@ close("all")
 
 s = sp.Symbol('s')
 
-#PT1
-#K = 2
-#T = 3
-#PT1 = K / (T*s + 1)
-#
+# PT1
+K = 1
+T = 1
+PT1 = K / (T*s + 1)
+G_ = control.tf([K],[1,T])
+figure(100)
+control.bode(G_)
+
 #
 ##PT2
 #K = 1
@@ -77,25 +80,27 @@ s = sp.Symbol('s')
 
 
 # 
-P = (1 - 0.05*s + 4* s**2) / (1 + s)**3 
-G_ = control.tf([4,-0.5,1],[1,3,3,1])
-figure(100)
-control.bode(G_)
+#P = (1 - 0.05*s + 4* s**2) / (1 + s)**3 
+#G_ = control.tf([4,-0.5,1],[1,3,3,1])
+#figure(100)
+#control.bode(G_)
+
 
 # SIMULATIONSSTEUERUNG --------------------------------------------------------
 
-t_sprung = 0
+t_sprung = 5
 #ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-N = 1000
-dt = 0.01
-ufnc, u_, A, N = prbsfnc(0.01,N,dt)        # PRBS Signal mit Amplitude, Periodendauer, Bitintervall
+dt = 0.5
+N = 5000 #int((1.5 * 15) / dt)
+a = 6
+ufnc, u_, A, N = prbsfnc(a,N,dt)        # PRBS Signal mit Amplitude, Periodendauer, Bitintervall
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 
 #t_max = int(1.5*dt*N)  
-t_max = 30                # Simulationsdauer in Sekunden
-t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,P,True,*PID,True)
+t_max = 60               # Simulationsdauer in Sekunden
+t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,PT1,True,*PID,True)
 y = b_out[G]
 u = np.array(b_out[IN])
 #u -= 1
@@ -119,36 +124,42 @@ if System == 'PT1':
     
     
 else:   # System -> unknown
-    F, R_uy, g = cross_cor_method(b_out[G],b_out[IN],A,N,dt)
-    t_inv = t[::-1]
-    t_cor = np.vstack([t_inv[:len(t)-1]*-1,t])
+#    F, R_uy, g = cross_cor_method(b_out[G],b_out[IN],A,N,dt)
+#    t_inv = t[::-1]
+#    t_cor = np.vstack([t_inv[:len(t)-1]*-1,t])
     
-    AKF_u = np.correlate(u,u,'full')
     
-    figure(1)
-    grid()
-    subplot(411)
-    plot(t,u)
-    title('PRBS Signal u (T = %4.2f)' % (N*dt))
+#    figure(1)
+#    grid()
+#    subplot(411)
+#    plot(t,u)
+#    title('PRBS Signal u (T = %4.2f)' % (N*dt))
+#    
+#    subplot(412)
+#    plot(t,y)
+#    title('Systemausgang y')
+#    
+#    subplot(413)
+#    plot(t,R_uu[len(t)-1:])
+#    title('Autokorrelation R_uu')
+#    xlabel('t in s')
+# 
+#    subplot(414)
+#    #plot(t,Phi[len(t)-1:])
+#    plot(R_uy)
+#    title('Kreuzkorrelation R_uy')
+#    
+#    tight_layout()
     
-    subplot(412)
-    plot(t,y)
-    title('Systemausgang y')
+    figure()
+    #plot(t,g)
+    np.linspace()
+    g_a = K / T * np.exp(-t/T)
+    plot(t,g_a)
+    F = np.fft.fft(g_a)
     
-    subplot(413)
-    plot(t,AKF_u[len(t)-1:])
-    title('Autokorrelation R_uu')
-    xlabel('t in s')
- 
-    subplot(414)
-    #plot(t,Phi[len(t)-1:])
-    plot(R_uy)
-    title('Kreuzkorrelation R_uy')
-    
-    tight_layout()
-    
-#    figure(2)
-#    plot(F[:].real,F[:].imag)
+    figure(2)
+    plot(F[:].real,F[:].imag)
      
     L = (len(F) + 1 )/ 2  # Länge des halben FFT-Ergebnis
     fft_timestep = 5e-3  
@@ -158,7 +169,8 @@ else:   # System -> unknown
     
     # Bodediagramm aus der ermittelten Übertragungsfunktion F
     F_abs = np.abs(F[:L])
-    F_phi = np.arctan2(F[:L].imag, F[:L].real) * 180 / np.pi
+    #F_phi = np.arctan2(F[:L].imag, F[:L].real) * 180 / np.pi
+    F_phi = np.angle(F[:L], deg=True)  
                        
     figure(100)
     subplot(211)
