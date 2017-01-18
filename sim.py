@@ -22,13 +22,13 @@ def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K,noise):
  
     if only == True:   # only controlled system
     
-        G = TFBlock(controlled_system, u)
+        S = TFBlock(controlled_system, u)
         
         IN = Blockfnc(u)
             
-        SUM = Blockfnc(G.Y + n)
+        SUM = Blockfnc(S.Y + n)
         
-        G_noise = TFBlock((1 / (0.005*s + 1)), SUM.Y)    
+        S_noise = TFBlock((1 / (0.005*s + 1)), SUM.Y)    
         
         
 #    else:    # simulation with PID
@@ -40,9 +40,9 @@ def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K,noise):
 #        
 #        Kp = Blockfnc ((SUM1.Y + I.Y + D.Y)*K)
 #        
-#        G = TFBlock(controlled_system, Kp.Y)
+#        S = TFBlock(controlled_system, Kp.Y)
 #        
-#        loop(G.Y, y)
+#        loop(S.Y, y)
 #        
 #        IN = Blockfnc(u)
     
@@ -50,6 +50,6 @@ def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K,noise):
     
     b_out = compute_block_ouptputs(states)
     
-    return t,b_out, G, IN, G_noise
+    return t,b_out, S, IN, S_noise
 
 

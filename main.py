@@ -41,9 +41,6 @@ s = sp.Symbol('s')
 K = 1
 T = 1
 PT1 = K / (T*s + 1)
-G_ = control.tf([K],[1,T])
-figure(100)
-control.bode(G_)
 
 #
 ##PT2
@@ -91,17 +88,17 @@ control.bode(G_)
 t_sprung = 5
 #ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-dt = 0.5
-N = 5000 #int((1.5 * 15) / dt)
-a = 6
-ufnc, u_, A, N = prbsfnc(a,N,dt)        # PRBS Signal mit Amplitude, Periodendauer, Bitintervall
+Lambda = 1    # Taktzeit des PRBS Signals
+#N = 10000
+A = 1
+ufnc, u_, N = prbsfnc(A,Lambda)        # PRBS Signal mit Amplitude, Periodendauer, Bitintervall
 
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 
 #t_max = int(1.5*dt*N)  
-t_max = 60               # Simulationsdauer in Sekunden
-t, b_out, G, IN, G_noise = Simulator(t_max,ufnc,PT1,True,*PID,True)
-y = b_out[G]
+t_max = 50               # Simulationsdauer in Sekunden
+t, b_out, S, IN, S_noise = Simulator(t_max,ufnc,PT1**5,True,*PID,True)
+y = b_out[S]
 u = np.array(b_out[IN])
 #u -= 1
 
@@ -112,11 +109,11 @@ System = ''
 # PARAMETERIDENTIFIKATION -----------------------------------------------------
 
 if System == 'PT1':
-    K_e,T_e = area_method(t,t_sprung,b_out[G])
+    K_e,T_e = area_method(t,t_sprung,b_out[S])
     print("K_e = " + str(K_e))
     print("T_e = " + str(T_e))
     
-    K_e,T_e = area_method(t,t_sprung,b_out[G_noise])
+    K_e,T_e = area_method(t,t_sprung,b_out[S_noise])
     print("K_e = " + str(K_e))
     print("T_e = " + str(T_e))
     
@@ -124,62 +121,64 @@ if System == 'PT1':
     
     
 else:   # System -> unknown
-#    F, R_uy, g = cross_cor_method(b_out[G],b_out[IN],A,N,dt)
-#    t_inv = t[::-1]
-#    t_cor = np.vstack([t_inv[:len(t)-1]*-1,t])
-    
-    
-#    figure(1)
-#    grid()
-#    subplot(411)
-#    plot(t,u)
-#    title('PRBS Signal u (T = %4.2f)' % (N*dt))
-#    
-#    subplot(412)
-#    plot(t,y)
-#    title('Systemausgang y')
-#    
-#    subplot(413)
-#    plot(t,R_uu[len(t)-1:])
-#    title('Autokorrelation R_uu')
-#    xlabel('t in s')
-# 
-#    subplot(414)
-#    #plot(t,Phi[len(t)-1:])
-#    plot(R_uy)
-#    title('Kreuzkorrelation R_uy')
-#    
-#    tight_layout()
-    
-    figure()
-    #plot(t,g)
-    np.linspace()
-    g_a = K / T * np.exp(-t/T)
-    plot(t,g_a)
-    F = np.fft.fft(g_a)
-    
-    figure(2)
-    plot(F[:].real,F[:].imag)
-     
-    L = (len(F) + 1 )/ 2  # Länge des halben FFT-Ergebnis
-    fft_timestep = 5e-3  
-    freq_axis = np.linspace(0, 1 / (2 * fft_timestep),L,endpoint=True)
-    F = F * 2 / L   # Amplitude anpassen
+    G, w, g = cross_cor_method(y[1:],u[1:],A,N,Lambda,t[1:])
+
+    # "Analytisches" Bodediagramm
+    PT1 = control.tf([K],[T,1])
+    [mag,phase,wout] = control.bode(PT1**5,w,Plot=False)
 
     
-    # Bodediagramm aus der ermittelten Übertragungsfunktion F
-    F_abs = np.abs(F[:L])
-    #F_phi = np.arctan2(F[:L].imag, F[:L].real) * 180 / np.pi
-    F_phi = np.angle(F[:L], deg=True)  
-                       
-    figure(100)
+    # Bodediagramm aus der ermittelten Übertragungsfunktion G
+    G_abs = abs(G)
+    G_phi = np.angle(G,deg = True)  
+    
+    ####
+    PT1 = control.tf([1],[1,1])
+    g_a, tout = control.matlab.impulse(PT1**5,t[1:])
+    dt = 2e-3# Zeitauflösung
+    Fs = 1/dt   # Abtastfrequenz
+    L = len(g)
+    G_ = np.fft.fft(g_a)    
+    G_ = dt*G_[1:L/2+1]
+    G_abs_a = abs(G)
+    G_phi_a = np.angle(G_,deg = True)
+    ####
+    
+    figure(2)
     subplot(211)
-    loglog(freq_axis,F_abs)
+    semilogx(w,20*np.log10(G_abs_a),'r')
+    semilogx(wout,20*np.log10(mag),'g')
+    semilogx(w,20*np.log10(G_abs),'--b')
     title('Amplitudengang')
+    ylabel('Amplitude in dB')
     
     subplot(212)
-    semilogx(freq_axis,F_phi)
+    semilogx(w,G_phi_a,'r')
+    semilogx(wout,phase,'g')
+    semilogx(w,G_phi,'--b')
     title('Frequenzgang')
+    ylabel('Phase in Grad')
+    
+    show()
+    
+    figure()
+    plot(G_.real,G_.imag)
+    plot(G.real,G.imag,'r')
+    
+    i = 0
+    while 1:
+        i = i + 1
+        if G[i].imag**2 < 0.001:
+            T_u_mess = 2*np.pi / (w[i])
+            K_u_mess = 1/abs(G[i].real)
+            break
+    j = 0
+    while 1:
+        j = j + 1
+        if G_[j].imag**2 < 0.001:
+            T_u_ana = 2*np.pi / (w[j])
+            K_u_ana = 1/abs(G_[i].real)
+            break        
 
 # AUSGABE ---------------------------------------------------------------------
 
