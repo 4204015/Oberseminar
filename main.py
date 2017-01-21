@@ -41,6 +41,7 @@ s = sp.Symbol('s')
 K = 1
 T = 1
 PT1 = K / (T*s + 1)
+o = 3
 
 #
 ##PT2
@@ -96,8 +97,8 @@ ufnc, u_, N = prbsfnc(A,Lambda)        # PRBS Signal mit Amplitude, Periodendaue
 PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
 
 #t_max = int(1.5*dt*N)  
-t_max = 50               # Simulationsdauer in Sekunden
-t, b_out, S, IN, S_noise = Simulator(t_max,ufnc,PT1**5,True,*PID,True)
+t_max = 100              # Simulationsdauer in Sekunden
+t, b_out, S, IN, S_noise = Simulator(t_max,ufnc,PT1**o,True,*PID,True)
 y = b_out[S]
 u = np.array(b_out[IN])
 #u -= 1
@@ -121,11 +122,11 @@ if System == 'PT1':
     
     
 else:   # System -> unknown
-    G, w, g = cross_cor_method(y[1:],u[1:],A,N,Lambda,t[1:])
+    G, w, g = cross_cor_method(y[1:],u[1:],A,N,Lambda,t[1:],o)
 
     # "Analytisches" Bodediagramm
     PT1 = control.tf([K],[T,1])
-    [mag,phase,wout] = control.bode(PT1**5,w,Plot=False)
+    [mag,phase,wout] = control.bode(PT1**o,w,Plot=False)
 
     
     # Bodediagramm aus der ermittelten Übertragungsfunktion G
@@ -133,14 +134,14 @@ else:   # System -> unknown
     G_phi = np.angle(G,deg = True)  
     
     ####
-    PT1 = control.tf([1],[1,1])
-    g_a, tout = control.matlab.impulse(PT1**5,t[1:])
-    dt = 2e-3# Zeitauflösung
+    PT1 = control.tf([K],[T,1])
+    g_a, tout = control.matlab.impulse(PT1**o,t[1:])
+    dt = 5e-3# Zeitauflösung
     Fs = 1/dt   # Abtastfrequenz
-    L = len(g)
-    G_ = np.fft.fft(g_a)    
+    L = len(g_a)
+    G_ = np.fft.fft(g_a)   
     G_ = dt*G_[1:L/2+1]
-    G_abs_a = abs(G)
+    G_abs_a = abs(G_)
     G_phi_a = np.angle(G_,deg = True)
     ####
     

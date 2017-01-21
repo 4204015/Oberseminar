@@ -9,10 +9,10 @@ from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, s
 import numpy as np
 import control
 
-def cross_cor_method(y,u,A,N,dt,t):
+def cross_cor_method(y,u,A,N,dt,t,o):
     
     PT1 = control.tf([1],[1,1])
-    g_a, tout = control.matlab.impulse(PT1**5,t)
+    g_a, tout = control.matlab.impulse(PT1**o,t)
     
     """ Bestimmung der Kreukorrelation -> Gewichtsfunktion """
     
@@ -25,7 +25,7 @@ def cross_cor_method(y,u,A,N,dt,t):
     R_uy = R_uy_inv[::-1] # Kreuzkorrelation muss entsprechend der Implementierung und der Definition gespiegelt werden
     
     
-    idx = ((len(R_uy)-1) / 2)
+    idx = ((len(R_uy)) / 2)
 #   k = 2/(dt+0.1)   
 #   g = R_uy[idx:]*k / R_uu[idx]
     
@@ -34,7 +34,7 @@ def cross_cor_method(y,u,A,N,dt,t):
     """ Bestimmung der Frequenzantwort aus der Gewichtsfunktion """
     
     # FFT-Parameter
-    dt = 2e-3   # Zeitauflösung
+    dt = 5e-3   # Zeitauflösung
     Fs = 1/dt   # Abtastfrequenz
     L = len(g)
     
@@ -42,7 +42,7 @@ def cross_cor_method(y,u,A,N,dt,t):
     G = dt*G[1:L/2+1]
     
     # Frequenzachse
-    w = 2 * np.pi * Fs * np.arange(0,(L/2))/L
+    w = 2 * np.pi * Fs * np.arange(0,(L/2)-1)/L
      
     
     """ Ausgabe Übersicht """
