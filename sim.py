@@ -14,7 +14,7 @@ s = sp.Symbol('s')
 from noise_gen import noise_fnc
 
 
-def Simulator(t_max,u_func,controlled_system,only,T_i, T_d, T_n,K,noise):
+def Simulator(dt,t_max,u_func,controlled_system,only,T_i, T_d, T_n,K,noise):
     
     n_func = noise_fnc()
     

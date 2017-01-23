@@ -13,7 +13,7 @@ from pyblocksim import inputs, TFBlock, stepfnc, blocksimulation, compute_block_
 
 # Plotting library
 from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, subplot, tight_layout, ylim, xlim, close, loglog, semilogx
-import matplotlib as mp
+import matplotlib.pyplot as mp
 
 # Library for symbolic mathematics
 import sympy as sp
@@ -41,7 +41,7 @@ s = sp.Symbol('s')
 K = 1
 T = 1
 PT1 = K / (T*s + 1)
-o = 3
+o = 1
 
 #
 ##PT2
@@ -89,16 +89,20 @@ o = 3
 t_sprung = 5
 #ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-Lambda = 1    # Taktzeit des PRBS Signals
+f0 = 800
+Lambda = 1/f0    # Taktzeit des PRBS Signals
 #N = 10000
 A = 1
 ufnc, u_, N = prbsfnc(A,Lambda)        # PRBS Signal mit Amplitude, Periodendauer, Bitintervall
 
-PID = [3,1,1,5]             # Parameter des PID Reglers - T_i, T_d, T_n, K
+PID = [3,1,1,5]         # Parameter des PID Reglers - T_i, T_d, T_n, K
+ 
 
-#t_max = int(1.5*dt*N)  
-t_max = 100              # Simulationsdauer in Sekunden
-t, b_out, S, IN, S_noise = Simulator(t_max,ufnc,PT1**o,True,*PID,True)
+dt = 1e-4               # Schrittweite des Ergebnisvektors
+Fa = 1/dt                # Abtastfrequenz
+#t_max = 100             # Simulationsdauer in Sekunden
+t_max = Lambda * N * 4 
+t, b_out, S, IN, S_noise = Simulator(dt,t_max,ufnc,PT1**o,True,*PID,True)
 y = b_out[S]
 u = np.array(b_out[IN])
 #u -= 1
@@ -122,7 +126,7 @@ if System == 'PT1':
     
     
 else:   # System -> unknown
-    G, w, g = cross_cor_method(y[1:],u[1:],A,N,Lambda,t[1:],o)
+    G, w, g = cross_cor_method(y,u,A,N,Lambda,t,o,dt)
 
     # "Analytisches" Bodediagramm
     PT1 = control.tf([K],[T,1])
@@ -135,9 +139,7 @@ else:   # System -> unknown
     
     ####
     PT1 = control.tf([K],[T,1])
-    g_a, tout = control.matlab.impulse(PT1**o,t[1:])
-    dt = 5e-3# Zeitauflösung
-    Fs = 1/dt   # Abtastfrequenz
+    g_a, tout = control.matlab.impulse(PT1**o,t[0:len(g)])
     L = len(g_a)
     G_ = np.fft.fft(g_a)   
     G_ = dt*G_[1:L/2+1]
@@ -150,6 +152,7 @@ else:   # System -> unknown
     semilogx(w,20*np.log10(G_abs_a),'r')
     semilogx(wout,20*np.log10(mag),'g')
     semilogx(w,20*np.log10(G_abs),'--b')
+    mp.axvline(x = 2*np.pi*f0, color='y')
     title('Amplitudengang')
     ylabel('Amplitude in dB')
     
@@ -157,14 +160,26 @@ else:   # System -> unknown
     semilogx(w,G_phi_a,'r')
     semilogx(wout,phase,'g')
     semilogx(w,G_phi,'--b')
+    mp.axvline(x = 2*np.pi*f0, color='y')
     title('Frequenzgang')
     ylabel('Phase in Grad')
     
     show()
     
     figure()
-    plot(G_.real,G_.imag)
-    plot(G.real,G.imag,'r')
+    plot(G_.real,G_.imag,'r')
+    plot(G.real,G.imag,'b')
+    
+    
+    
+    L = len(u)
+    S = np.fft.fft(u)    
+    S = S[1:L/2+1]
+    f = 1/dt * np.arange(0,len(S))/L
+    figure(5)
+    plot(f,abs(S))
+
+    
     
     i = 0
     while 1:

@@ -12,8 +12,8 @@ import random as rd
 
 def prbsfnc(A,Lambda): 
     
-    gen_poly = (6,5);
-    m = 6
+    gen_poly = (11,9);
+    m =119
     N = 2**m - 1
     R = np.zeros(m,dtype=int)
     R[0] = 1
@@ -28,6 +28,7 @@ def prbsfnc(A,Lambda):
     
     prbs = np.array(arrayOut)*2 - 1
     
+    
     print(sum(prbs)/len(prbs))
     tt = [Lambda*x for x in range(N)]
     tt = np.array(tt)
@@ -36,7 +37,7 @@ def prbsfnc(A,Lambda):
     def fnc(t):
         
         t = t % t_max
-        idx = len(tt[tt < t])
+        idx = len(tt[tt <= t]) - 1
         return prbs[idx] # + 1    # Überlagerung mit Einheitsprung    
         
     return fnc ,prbs, N

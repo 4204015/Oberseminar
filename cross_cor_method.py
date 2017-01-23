@@ -9,7 +9,7 @@ from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, s
 import numpy as np
 import control
 
-def cross_cor_method(y,u,A,N,dt,t,o):
+def cross_cor_method(y,u,A,N,Lambda,t,o,dt):
     
     PT1 = control.tf([1],[1,1])
     g_a, tout = control.matlab.impulse(PT1**o,t)
@@ -29,20 +29,20 @@ def cross_cor_method(y,u,A,N,dt,t,o):
 #   k = 2/(dt+0.1)   
 #   g = R_uy[idx:]*k / R_uu[idx]
     
-    g = 1/(A**2 * ((N+1)/N) * dt) * (R_uy[idx:] + A**2 / N)
-
+    g = 1/(A**2 * ((N+1)/N) * Lambda) * (R_uy[idx:] + A**2 / N)
+    g_s = g[:int(N*Lambda/dt)]
+    
     """ Bestimmung der Frequenzantwort aus der Gewichtsfunktion """
     
     # FFT-Parameter
-    dt = 5e-3   # Zeitauflösung
-    Fs = 1/dt   # Abtastfrequenz
-    L = len(g)
+    Fa = 1/dt   # Abtastfrequenz
+    L = len(g_s)
     
-    G = np.fft.fft(g)    
+    G = np.fft.fft(g_s)    
     G = dt*G[1:L/2+1]
     
     # Frequenzachse
-    w = 2 * np.pi * Fs * np.arange(0,(L/2)-1)/L
+    w = 2 * np.pi * Fa * np.arange(0,len(G))/L
      
     
     """ Ausgabe Übersicht """
@@ -74,4 +74,4 @@ def cross_cor_method(y,u,A,N,dt,t,o):
     tight_layout()
     
     
-    return G, w, g
+    return G, w, g_s
