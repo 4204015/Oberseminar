@@ -10,7 +10,7 @@ import numpy as np
 import random as rd
 
 
-def prbsfnc(A,Lambda): 
+def prbsfnc(A, Lambda, dt=.005): 
     
     gen_poly = (11,9);
     m =11
@@ -34,10 +34,17 @@ def prbsfnc(A,Lambda):
     tt = np.array(tt)
     t_max = tt[N-1]
 
-    def fnc(t):
+    def fnc(t, debug_flag=False):
         
-        t = t % t_max
-        idx = len(tt[tt <= t]) - 1
-        return prbs[idx] # + 1    # Überlagerung mit Einheitsprung    
+        #t = t % t_max
+        #idx = len(tt[tt <= t]) - 1
         
-    return fnc ,prbs, N
+        # first round to compensate representation errors, then cast to int
+        idx = np.int16(np.round(t/dt, 6))#len(tt[tt < t])
+        idx = idx % len(prbs)
+        if debug_flag:
+            print(t, idx)
+            #print(idx)
+        return prbs[idx]
+        
+    return fnc, prbs, N
