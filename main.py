@@ -89,7 +89,7 @@ o = 1
 t_sprung = 5
 #ufnc = stepfnc(t_sprung, 1)  # Eingangsfunktion mit Zeitpunkt, Sprunghöhe
 
-f0 = 800
+f0 = 10
 Lambda = 1/f0    # Taktzeit des PRBS Signals
 #N = 10000
 A = 1
@@ -98,7 +98,7 @@ ufnc, u_, N = prbsfnc(A,Lambda)        # PRBS Signal mit Amplitude, Periodendaue
 PID = [3,1,1,5]         # Parameter des PID Reglers - T_i, T_d, T_n, K
  
 
-dt = 1e-4               # Schrittweite des Ergebnisvektors
+dt = 5e-3               # Schrittweite des Ergebnisvektors
 Fa = 1/dt                # Abtastfrequenz
 #t_max = 100             # Simulationsdauer in Sekunden
 t_max = Lambda * N * 4 

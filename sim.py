@@ -46,7 +46,7 @@ def Simulator(dt,t_max,u_func,controlled_system,only,T_i, T_d, T_n,K,noise):
 #        
 #        IN = Blockfnc(u)
     
-    t, states = blocksimulation(t_max, {u: u_func, n: n_func})
+    t, states = blocksimulation(t_max, {u: u_func, n: n_func}, dt=dt)
     
     b_out = compute_block_ouptputs(states)
     
