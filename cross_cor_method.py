@@ -9,10 +9,9 @@ from matplotlib.pyplot import plot, grid, show, figure, title, xlabel, ylabel, s
 import numpy as np
 import control
 
-def cross_cor_method(y,u,A,N,Lambda,t,o,dt):
+def cross_cor_method(y,u,A,N,Lambda,t,o,dt,PT1):
     
-    PT1 = control.tf([1],[1,1])
-    g_a, tout = control.matlab.impulse(PT1**o,t)
+    g_a, tout = control.matlab.impulse(PT1,t)
     
     """ Bestimmung der Kreukorrelation -> Gewichtsfunktion """
     
@@ -39,7 +38,7 @@ def cross_cor_method(y,u,A,N,Lambda,t,o,dt):
     L = len(g_s)
     
     G = np.fft.fft(g_s)    
-    G = dt*G[1:L/2+1]
+    G = dt * G[1:L/2+1]
     
     # Frequenzachse
     w = 2 * np.pi * Fa * np.arange(0,len(G))/L
@@ -69,7 +68,7 @@ def cross_cor_method(y,u,A,N,Lambda,t,o,dt):
     subplot(515)
     plot(t,g)
     plot(tout,g_a,'--r')
-    title('Gewichtsfunktion')
+    title('"perodische" Impulsantwort g')
     
     tight_layout()
     

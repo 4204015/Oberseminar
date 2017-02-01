@@ -10,10 +10,10 @@ import numpy as np
 import random as rd
 
 
-def prbsfnc(A,Lambda): 
+def prbsfnc(A, Lambda): 
     
-    gen_poly = (11,9);
-    m =11
+    gen_poly = (9,5);
+    m = 9
     N = 2**m - 1
     R = np.zeros(m,dtype=int)
     R[0] = 1
@@ -26,18 +26,25 @@ def prbsfnc(A,Lambda):
         xor = int(R[gen_poly[0]-1] ^ R[gen_poly[1]-1])
         R = np.concatenate(([xor],R[0:m-1]))
     
-    prbs = np.array(arrayOut)*2 - 1
+    prbs = np.array(arrayOut)*2*A - A
     
     
     print(sum(prbs)/len(prbs))
     tt = [Lambda*x for x in range(N)]
     tt = np.array(tt)
-    t_max = tt[N-1]
+    #t_max = tt[N-1]
 
-    def fnc(t):
+    def fnc(t, debug_flag=False):
         
-        t = t % t_max
-        idx = len(tt[tt <= t]) - 1
-        return prbs[idx] # + 1    # Überlagerung mit Einheitsprung    
+        #t = t % t_max
+        #idx = len(tt[tt <= t]) - 1
         
-    return fnc ,prbs, N
+        # first round to compensate representation errors, then cast to int
+        idx = np.int16(np.round(t/Lambda, 6))#len(tt[tt < t])
+        idx = idx % len(prbs)
+        if debug_flag:
+            print(t, idx)
+            #print(idx)
+        return prbs[idx]
+        
+    return fnc, prbs, N
